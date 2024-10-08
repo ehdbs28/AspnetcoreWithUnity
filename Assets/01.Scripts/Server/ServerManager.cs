@@ -1,13 +1,18 @@
 using System;
 using Microsoft.AspNetCore.SignalR.Client;
+using TMPro;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
 
 public class ServerManager : MonoSingleton<ServerManager>
 {
     private HubConnection _gameHub;
-
     private readonly string _serverUrl = "http://localhost:5162/";
+    private string _playerId;
+
+    private bool _isSet = false;
+
+    [Header("For Test")] 
+    [SerializeField] private TextMeshProUGUI _logText;
 
     private async void Start()
     {
@@ -17,7 +22,20 @@ public class ServerManager : MonoSingleton<ServerManager>
 
         _gameHub.On<string, string>("ReceiveMessage", (clientId, message) =>
         {
-            Debug.Log($"{clientId}: {message}");
+            var log = $"{clientId}: {message}\n";
+            Debug.Log(log);
+            _logText.text += log;
+        });
+
+        _gameHub.On<string>("PlayerJoined", playerId =>
+        {
+            if (_isSet)
+            {
+                return;
+            }
+            
+            _playerId = playerId;
+            _isSet = true;
         });
 
         try
@@ -29,13 +47,23 @@ public class ServerManager : MonoSingleton<ServerManager>
         {
             Debug.LogError(e);
         }
+
+        await _gameHub.InvokeAsync("JoinGame");
     }
-    
-    public async void SendMessage(string user, string message)
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            SendMessage(_playerId, "SendMessage to client");
+        }
+    }
+
+    public async void SendMessage(string playerId, string message)
     {
         try
         {
-            await _gameHub.InvokeAsync("SendMessage", user, message);
+            await _gameHub.InvokeAsync("SendMessage", playerId, message);
         }
         catch (Exception ex)
         {
