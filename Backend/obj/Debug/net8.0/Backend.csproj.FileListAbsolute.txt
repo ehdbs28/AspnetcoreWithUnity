@@ -32,3 +32,5 @@
 /Users/doyun/Documents/Unity/AspnetcoreWithUnity/Backend/obj/Debug/net8.0/Backend.pdb
 /Users/doyun/Documents/Unity/AspnetcoreWithUnity/Backend/obj/Debug/net8.0/Backend.genruntimeconfig.cache
 /Users/doyun/Documents/Unity/AspnetcoreWithUnity/Backend/obj/Debug/net8.0/ref/Backend.dll
+/Users/doyun/Documents/Unity/AspnetcoreWithUnity/Backend/bin/Debug/net8.0/Newtonsoft.Json.dll
+/Users/doyun/Documents/Unity/AspnetcoreWithUnity/Backend/bin/Debug/net8.0/System.Net.WebSockets.WebSocketProtocol.dll
