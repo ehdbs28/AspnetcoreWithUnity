@@ -48,14 +48,6 @@ public class ServerManager : MonoSingleton<ServerManager>
         await _gameHub.InvokeAsync("JoinGame");
     }
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            SendMessage(_playerId, "SendMessage to client");
-        }
-    }
-
     public async void SendMessage(string playerId, string message)
     {
         try

@@ -28,6 +28,7 @@ app.UseEndpoints(endPoints =>
 {
     endPoints.MapControllers();
     app.MapHub<GameHub>("/GameHub");
+    app.MapHub<PlayerHub>("/PlayerHub");
 });
 
 app.Run();

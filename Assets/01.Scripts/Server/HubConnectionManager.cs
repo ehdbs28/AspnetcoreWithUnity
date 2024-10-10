@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -8,7 +9,7 @@ public enum HubType
     GameHub,
 }
 
-public class HubConnectionManager : MonoSingleton<HubConnectionManager>
+public class HubConnectionManager : MonoSingleton<HubConnectionManager>, IDisposable
 {
     private readonly Dictionary<HubType, HubConnection> _hubConnections = new Dictionary<HubType, HubConnection>();
     private readonly string _serverUrl = "http://localhost:5162/";
@@ -49,5 +50,20 @@ public class HubConnectionManager : MonoSingleton<HubConnectionManager>
         {
             await hubConnection.StopAsync();
         }
+    }
+
+    public void OnDestroy()
+    {
+        Dispose();
+    }
+
+    public async void Dispose()
+    {
+        foreach (var hubConnection in _hubConnections.Values)
+        {
+            await hubConnection.StopAsync();
+            await hubConnection.DisposeAsync();
+        }
+        _hubConnections.Clear();
     }
 }
