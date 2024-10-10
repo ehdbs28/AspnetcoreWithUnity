@@ -6,7 +6,6 @@ using UnityEngine;
 public class ServerManager : MonoSingleton<ServerManager>
 {
     private HubConnection _gameHub;
-    private readonly string _serverUrl = "http://localhost:5162/";
     private string _playerId;
 
     private bool _isSet = false;
@@ -16,9 +15,7 @@ public class ServerManager : MonoSingleton<ServerManager>
 
     private async void Start()
     {
-        _gameHub = new HubConnectionBuilder()
-            .WithUrl($"{_serverUrl}gameHub")
-            .Build();
+        _gameHub = HubConnectionManager.Instance.GetHubConnection(HubType.GameHub);
 
         _gameHub.On<string, string>("ReceiveMessage", (clientId, message) =>
         {
@@ -40,7 +37,7 @@ public class ServerManager : MonoSingleton<ServerManager>
 
         try
         {
-            await _gameHub.StartAsync();
+            await HubConnectionManager.Instance.StartConnection(HubType.GameHub);
             Debug.Log("Connection to hub");
         }
         catch(Exception e)
@@ -73,7 +70,6 @@ public class ServerManager : MonoSingleton<ServerManager>
 
     private async void OnDestroy()
     {
-        await _gameHub.StopAsync();
-        await _gameHub.DisposeAsync();
+        await HubConnectionManager.Instance.StopConnection(HubType.GameHub);
     }
 }

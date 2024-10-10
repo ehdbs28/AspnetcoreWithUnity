@@ -27,7 +27,7 @@ app.UseRouting();
 app.UseEndpoints(endPoints =>
 {
     endPoints.MapControllers();
-    app.MapHub<GameHub>("/gameHub");
+    app.MapHub<GameHub>("/GameHub");
 });
 
 app.Run();
