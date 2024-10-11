@@ -1,6 +1,6 @@
 public interface IGameHubConnector
 {
-    public void OnClientConnect(string clientId);
-    public void OnPlayerJoined(string clientId, string nickName);
-    public void OnPlayerLeft(string clientId);
+    public void OnLoginFailure();
+    public void OnLoginSuccess(int userId);
+    public void OnLogOut(int userId);
 }

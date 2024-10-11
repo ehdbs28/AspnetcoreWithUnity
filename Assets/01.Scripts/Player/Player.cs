@@ -4,9 +4,8 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    private string _nickName;
     
-    public void SetUp(string nickName)
+    public void SetUp(Character character)
     {
         
     }
@@ -27,7 +26,7 @@ public class Player : MonoBehaviour
 
             var playerHub = HubConnectionManager.Instance.GetHubConnection(HubType.PlayerHub);
             var jsonVector = JsonUtility.ToJson(newPosition.ToSystemVector());
-            await playerHub.SendAsync("UpdatePlayerPosition", ServerManager.Instance.MyClientId, jsonVector);
+            await playerHub.SendAsync("UpdatePlayerPosition", ServerManager.Instance.MyUserId, jsonVector);
         });
     }
 }

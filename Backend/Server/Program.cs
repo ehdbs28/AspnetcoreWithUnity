@@ -18,7 +18,7 @@ builder.Services.AddSignalR();
 builder.Services.AddControllers();
 
 var connectionString = builder.Configuration.GetConnectionString("MyDB");
-builder.Services.AddDbContext<UserContext>(options =>
+builder.Services.AddDbContext<GameDBContext>(options =>
 {
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 });

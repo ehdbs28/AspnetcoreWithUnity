@@ -11,7 +11,8 @@ public class TestUI : MonoBehaviour
     [SerializeField] private GameObject _initPanel;
     [SerializeField] private GameObject _waitPanel;
 
-    [SerializeField] private TMP_InputField _nickNameInput;
+    [SerializeField] private TMP_InputField _userIdInput;
+    [SerializeField] private TMP_InputField _passwordInput;
     [SerializeField] private Button _button;
 
     private void Awake()
@@ -27,13 +28,14 @@ public class TestUI : MonoBehaviour
 
     private async void OnClickButton()
     {
-        if (string.IsNullOrEmpty(_nickNameInput.text))
-        {
-            return;
-        }
-        
         var gameHub = HubConnectionManager.Instance.GetHubConnection(HubType.GameHub);
-        await gameHub.SendAsync("ConnectPlayer", _nickNameInput.text);
-        _initPanel.SetActive(false);
+        if (await gameHub.InvokeAsync<bool>("Login", _userIdInput.text, _passwordInput.text))
+        {
+            _initPanel.SetActive(false);
+        }
+        else
+        {
+            Debug.Log("Login 실패");
+        }
     }
 }

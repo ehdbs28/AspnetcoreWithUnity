@@ -5,53 +5,35 @@ using UnityEngine;
 
 public class ServerManager : MonoSingleton<ServerManager>, IGameHubConnector
 {
-    public string MyClientId { get; private set; }    
+    public int MyUserId { get; private set; }    
 
     public void Init()
     {
         var gameHub = HubConnectionManager.Instance.GetHubConnection(HubType.GameHub);
 
-        gameHub.On<string>("ClientConnect", OnClientConnect);
-        gameHub.On<string, string>("PlayerJoined", OnPlayerJoined);
-        gameHub.On<string>("PlayerLeft", OnPlayerLeft);
+        gameHub.On("LoginFailure", OnLoginFailure);
+        gameHub.On<int>("LoginSuccess", OnLoginSuccess);
+        gameHub.On<int>("LogOut", OnLogOut);
     }
 
-    public bool IsOwner(string clientId)
+    public bool IsOwner(int userId)
     {
-        return MyClientId == clientId;
+        return MyUserId == userId;
     }
 
-    public void OnClientConnect(string clientId)
+    public void OnLoginFailure()
     {
-        if (string.IsNullOrEmpty(MyClientId))
-        {
-            MyClientId = clientId;
-        }
+        //
     }
 
-    public void OnPlayerJoined(string clientId, string nickName)
+    public void OnLoginSuccess(int userId)
     {
-        try
-        {
-            PlayerManager.Instance.CreatePlayer(clientId, nickName);
-        }
-        catch (Exception e)
-        {
-            Debug.LogError(e);
-            throw;
-        }
+        MyUserId = userId;
+        PlayerManager.Instance.CreatePlayer(userId);
     }
 
-    public void OnPlayerLeft(string clientId)
+    public void OnLogOut(int userId)
     {
-        try
-        {
-            PlayerManager.Instance.DestroyPlayer(clientId);
-        }
-        catch (Exception e)
-        {
-            Debug.LogError(e);
-            throw;
-        }
+        PlayerManager.Instance.DeletePlayer(userId);
     }
 }

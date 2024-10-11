@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -9,71 +8,80 @@ public class PlayerManager : MonoSingleton<PlayerManager>, IPlayerHubConnector
     [SerializeField] private MainPlayer _ownerPlayerPrefab;
     [SerializeField] private Player _playerPrefab;
     
-    private readonly Dictionary<string, Player> _connectedPlayers = new Dictionary<string, Player>();
-
     public void Init()
     {
         var playerHub = HubConnectionManager.Instance.GetHubConnection(HubType.PlayerHub);
-        playerHub.On<string, string>("UpdatePosition", OnUpdatePosition);
+
+        playerHub.On<Character>("CreatePlayer", OnCreatePlayer);
+        playerHub.On<int>("DeletePlayer", OnDeletePlayer);
+        playerHub.On<int, string>("UpdatePosition", OnUpdatePosition);
     }
     
-    public void CreatePlayer(string clientId, string nickName)
+    public async Task CreatePlayer(int userId)
     {
-        if (_connectedPlayers.ContainsKey(clientId))
-        {
-            return;
-        }
-        
+        var playerHub = HubConnectionManager.Instance.GetHubConnection(HubType.PlayerHub);
+        await playerHub.SendAsync("CreatePlayer", userId);
+    }
+
+    public async Task DeletePlayer(int userId)
+    {
+        var playerHub = HubConnectionManager.Instance.GetHubConnection(HubType.PlayerHub);
+        await playerHub.SendAsync("DeletePlayer", userId);
+        // if (!_connectedPlayers.TryGetValue(clientId, out var player))
+        // {
+        //     return;
+        // }
+        //
+        // MainThreadDispatcher.Instance.Enqueue(() =>
+        // {
+        //     Destroy(player.gameObject);
+        //     _connectedPlayers.Remove(clientId);
+        // });
+    }
+    
+    public void UpdatePosition(int userId, Vector3 position)
+    {
+        // try
+        // {
+        //     if (ServerManager.Instance.IsOwner(clientId))
+        //     {
+        //         return;
+        //     }
+        //     
+        //     if (!_connectedPlayers.TryGetValue(clientId, out var player))
+        //     {
+        //         return;
+        //     }
+        //
+        //     var systemVector = JsonUtility.FromJson<System.Numerics.Vector3>(position);
+        //     var unityVector = systemVector.ToUnityVector();
+        //
+        //     player.SetPosition(unityVector);
+        // }
+        // catch (Exception e)
+        // {
+        //     Debug.LogError(e);
+        //     throw;
+        // }
+    }
+
+    public void OnCreatePlayer(Character character)
+    {
         MainThreadDispatcher.Instance.Enqueue(async () =>
         {
-            var player = ServerManager.Instance.IsOwner(clientId) ? Instantiate(_ownerPlayerPrefab) : Instantiate(_playerPrefab);
-            player.SetUp(nickName);
+            var player = ServerManager.Instance.IsOwner(character.OwnerUserId) ? Instantiate(_ownerPlayerPrefab) : Instantiate(_playerPrefab);
+            player.SetUp(character);
 
             var pos = new Vector3(Random.Range(-10f, 10f), 0f, Random.Range(-10f, 10f));
             player.SetAndBroadcastPosition(pos);
-            
-            _connectedPlayers.Add(clientId, player);
         });
     }
 
-    public void DestroyPlayer(string clientId)
+    public void OnDeletePlayer(int userId)
     {
-        if (!_connectedPlayers.TryGetValue(clientId, out var player))
-        {
-            return;
-        }
-        
-        MainThreadDispatcher.Instance.Enqueue(() =>
-        {
-            Destroy(player.gameObject);
-            _connectedPlayers.Remove(clientId);
-        });
-        
     }
-    
-    public void OnUpdatePosition(string clientId, string position)
+
+    public void OnUpdatePosition(int userId, string jsonPosition)
     {
-        try
-        {
-            if (ServerManager.Instance.IsOwner(clientId))
-            {
-                return;
-            }
-            
-            if (!_connectedPlayers.TryGetValue(clientId, out var player))
-            {
-                return;
-            }
-
-            var systemVector = JsonUtility.FromJson<System.Numerics.Vector3>(position);
-            var unityVector = systemVector.ToUnityVector();
-
-            player.SetPosition(unityVector);
-        }
-        catch (Exception e)
-        {
-            Debug.LogError(e);
-            throw;
-        }
     }
 }

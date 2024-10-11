@@ -1,47 +1,54 @@
 using System.Numerics;
-using Backend.Server.Core;
+using Backend.DB;
+using Backend.DB.Models;
+using Backend.DB.Services;
 using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json;
 
 namespace Backend.Server.Hubs;
 
 public class PlayerHub : Hub
 {
     private readonly ILogger<PlayerHub> _logger;
+    private readonly CharacterServices _characterDbServices;
 
-    public PlayerHub(ILogger<PlayerHub> logger)
+    public PlayerHub(ILogger<PlayerHub> logger, GameDBContext dbContext)
     {
         _logger = logger;
+        _characterDbServices = new CharacterServices(dbContext);
     }
 
-    public Vector3 GetPlayerPositionInServer(string clientId)
+    public async Task CreatePlayer(int userId)
     {
-        var player = PlayerManager.Instance.GetPlayer(clientId);
+        var character = await _characterDbServices.GetCharacterByUserIdAsync(userId);
 
-        if (player == null)
+        if (character == null)
         {
-            _logger.LogWarning($"Cant Find Player: {clientId}");
-            return Vector3.Zero;
+            var newCharacter = new Character
+            {
+                OwnerUserId = userId,
+                Level = 0,
+                LastPosition = Vector3.Zero
+            };
+
+            await _characterDbServices.AddCharacter(newCharacter);
+            await Clients.All.SendAsync("CreatePlayer", character);
         }
-
-        return player.Position;
-    }
-
-    public async Task UpdatePlayerPosition(string clientId, string newPositionJson)
-    {
-        var player = PlayerManager.Instance.GetPlayer(clientId);
-
-        if (player == null)
+        else
         {
-            _logger.LogWarning($"Cant Find Player: {clientId}");
-            return;
+            await Clients.All.SendAsync("CreatePlayer", character);
         }
-
-        var newPosition = JsonConvert.DeserializeObject<Vector3>(newPositionJson);
-
-        await Clients.All.SendAsync("UpdatePosition", clientId, newPositionJson);
-        player.UpdatePosition(newPosition);
         
-        _logger.LogInformation($"Update Position: {clientId} to ({newPosition.X}, {newPosition.Y}, {newPosition.Z})");
+        _logger.LogInformation($"Success Create Character.");
+    }
+
+    public async Task DeletePlayer(Character character)
+    {
+        await _characterDbServices.UpdateCharacter(character);
+        await Clients.All.SendAsync("DeletePlayer", character.OwnerUserId);
+    }
+
+    public async Task UpdatePlayerPosition(int userId, string newPositionJson)
+    {
+        await Clients.All.SendAsync("UpdatePosition", userId, newPositionJson);
     }
 }

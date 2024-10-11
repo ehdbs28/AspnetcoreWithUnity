@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
-using Backend.Server.Core;
-using Backend.Server.Object;
+using Backend.DB;
+using Backend.DB.Services;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Backend.Server.Hubs;
@@ -8,34 +8,56 @@ namespace Backend.Server.Hubs;
 public class GameHub : Hub
 {
     private readonly ILogger<GameHub> _logger;
-    private static int _userCount;
-
-    public GameHub(ILogger<GameHub> logger)
+    private readonly UserServices _userDbServices;
+    
+    public GameHub(ILogger<GameHub> logger, GameDBContext dbContext)
     {
         _logger = logger;
+        _userDbServices = new UserServices(dbContext);
     }
 
-    public override async Task OnConnectedAsync()
+    public async Task<bool> Login(string userName, string password)
     {
-        _userCount++;
-        await Clients.All.SendAsync("ClientConnect", _userCount.ToString());
-        await base.OnConnectedAsync();
-    }
-
-    public async Task ConnectPlayer(string nickName)
-    {
-        var clientId = _userCount.ToString();
-
-        PlayerManager.Instance.ConnectPlayer(clientId, nickName);
+        if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
+        {
+            await Clients.User(Context.ConnectionId).SendAsync("LoginFailure");
+            return false;
+        }
         
-        await Clients.All.SendAsync("PlayerJoined", clientId, nickName);
-        _logger.LogInformation($"Successfully Connect Player: {clientId}");
+        var user = await _userDbServices.GetUserByUserNameAsync(userName);
+        if (user == null)
+        {
+            user = await _userDbServices.AddUser(userName, password);
+            await Clients.User(Context.ConnectionId).SendAsync("LoginSuccess", user.Id);
+        }
+        else
+        {
+            if (user.Password != password)
+            {
+                await Clients.User(Context.ConnectionId).SendAsync("LoginFailure");
+                return false;
+            }
+            await Clients.User(Context.ConnectionId).SendAsync("LoginSuccess", user.Id);
+        }
+        
+        var currentTime = DateTime.Now;
+        _logger.LogInformation($"({currentTime:hh:mm:ss}) Login User: {userName}");
+
+        return true;
     }
 
-    public async Task DisconnectPlayer(string clientId)
+    public async Task LogOut(int id)
     {
-        PlayerManager.Instance.DisconnectPlayer(clientId);
-        await Clients.All.SendAsync("PlayerLeft", clientId);
-        _logger.LogInformation($"Disconnect Player: {clientId}");
+        var user = await _userDbServices.GetUserByIdAsync(id);
+
+        if (user == null)
+        {
+            return;
+        }
+
+        await Clients.User(Context.ConnectionId).SendAsync("LogOut", id);
+        
+        var currentTime = DateTime.Now;
+        _logger.LogInformation($"({currentTime:hh:mm:ss}) LogOut User: {user.UserName}");
     }
 }
