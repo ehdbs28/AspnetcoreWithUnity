@@ -1,12 +1,27 @@
+using System;
 using Microsoft.AspNetCore.SignalR.Client;
+using TMPro;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    private int _level;
+    [SerializeField] private TextMeshProUGUI _nickNameText;
     
-    public void SetUp(Character character)
+    private int _level;
+
+    protected virtual void Awake()
     {
+        var canvas = transform.Find("Canvas").GetComponent<Canvas>();
+        canvas.worldCamera = Camera.main;
+    }
+
+    public async void SetUp(Character character)
+    {
+        var gameHub = HubConnectionManager.Instance.GetHubConnection(HubType.GameHub);
+        var userName = await gameHub.InvokeAsync<string>("GetUserName", character.OwnerUserId);
+        
+        _nickNameText.text = userName;
+        
         _level = character.Level;
         transform.position = new Vector3
         (

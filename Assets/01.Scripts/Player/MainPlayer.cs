@@ -12,8 +12,9 @@ public class MainPlayer : Player
     private Transform _cameraTrm;
     private Transform _modelTrm;
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         _rigidbody = GetComponent<Rigidbody>();
         _cameraTrm = transform.Find("SightCamera");
         _modelTrm = transform.Find("Model");

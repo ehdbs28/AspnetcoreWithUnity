@@ -16,6 +16,12 @@ public class GameHub : Hub
         _userDbServices = new UserServices(dbContext);
     }
 
+    public async Task<string> GetUserName(int userId)
+    {
+        var user = await _userDbServices.GetUserByIdAsync(userId);
+        return user == null ? "" : user.UserName;
+    }
+
     public async Task<bool> Login(string userName, string password)
     {
         if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
