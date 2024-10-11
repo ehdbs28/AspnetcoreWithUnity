@@ -404,7 +404,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8097b8a846e54edda46bb8b54681cee3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _nickNameText: {fileID: 0}
+  _nickNameText: {fileID: 6381871178972314578}
 --- !u!136 &7317258806206985639
 CapsuleCollider:
   m_ObjectHideFlags: 0

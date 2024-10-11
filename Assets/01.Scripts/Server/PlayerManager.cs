@@ -1,8 +1,7 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Numerics;
 using Microsoft.AspNetCore.SignalR.Client;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 public class PlayerManager : MonoSingleton<PlayerManager>, IPlayerHubConnector
 {
@@ -26,7 +25,7 @@ public class PlayerManager : MonoSingleton<PlayerManager>, IPlayerHubConnector
         await playerHub.SendAsync("CreatePlayer", userId);
     }
 
-    public async void DeletePlayer(int userId)
+    public void DeletePlayer(int userId)
     {
         MainThreadDispatcher.Instance.Enqueue(async () =>
         {
@@ -50,6 +49,8 @@ public class PlayerManager : MonoSingleton<PlayerManager>, IPlayerHubConnector
             
             var player = ServerManager.Instance.IsOwner(character.OwnerUserId) ? Instantiate(_ownerPlayerPrefab) : Instantiate(_playerPrefab);
             player.SetUp(character);
+
+            Debug.Log(ServerManager.Instance.IsOwner(character.OwnerUserId));
             
             _connectedPlayers.Add(character.OwnerUserId, player);
         });
@@ -57,13 +58,13 @@ public class PlayerManager : MonoSingleton<PlayerManager>, IPlayerHubConnector
 
     public void OnDeletePlayer(int userId)
     {
+        if (!_connectedPlayers.Remove(userId, out var player))
+        {
+            return;
+        }
+        
         MainThreadDispatcher.Instance.Enqueue(() =>
         {
-            if (!_connectedPlayers.Remove(userId, out var player))
-            {
-                return;
-            }
-
             Destroy(player.gameObject);
 
             if (ServerManager.Instance.IsOwner(userId))
@@ -75,15 +76,20 @@ public class PlayerManager : MonoSingleton<PlayerManager>, IPlayerHubConnector
 
     public void OnUpdatePosition(int userId, string jsonPosition)
     {
-        MainThreadDispatcher.Instance.Enqueue(async () =>
+        if (ServerManager.Instance.IsOwner(userId))
         {
-            if (!_connectedPlayers.TryGetValue(userId, out var player))
-            {
-                return;
-            }
-            
-            var position = JsonUtility.FromJson<Vector3>(jsonPosition);
-            player.SetPosition(position);
+            return;
+        }
+        
+        if (!_connectedPlayers.TryGetValue(userId, out var player))
+        {
+            return;
+        }
+        
+        MainThreadDispatcher.Instance.Enqueue(() =>
+        {
+            var position = JsonUtility.FromJson<System.Numerics.Vector3>(jsonPosition);
+            player.SetPosition(position.ToUnityVector());
         });
     }
 }

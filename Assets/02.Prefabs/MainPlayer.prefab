@@ -146,7 +146,7 @@ GameObject:
   - component: {fileID: 3165578317300869080}
   - component: {fileID: 1521007509347399384}
   m_Layer: 0
-  m_Name: Main Camera
+  m_Name: SightCamera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -165,7 +165,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6021193352717997903}
+  m_Father: {fileID: 489379479573809470}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &3165578317300869080
 Camera:
@@ -555,6 +555,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3485971297536698653}
+  - {fileID: 1879420695032470477}
   m_Father: {fileID: 6021193352717997903}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &448598370833333498
@@ -639,7 +640,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 489379479573809470}
-  - {fileID: 1879420695032470477}
   - {fileID: 3148867889102629354}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -657,7 +657,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _nickNameText: {fileID: 8450228840115959517}
   _moveSpeed: 5
-  _lookSpeed: 2
+  _lookSpeed: 10
 --- !u!136 &5445070199124502829
 CapsuleCollider:
   m_ObjectHideFlags: 0

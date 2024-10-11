@@ -39,10 +39,16 @@ public class GameManager : MonoSingleton<GameManager>
 
     private bool OnApplicationWantToQuit()
     {
-        StartCoroutine(ApplicationQuitRoutine());
-        return false;
+        if (ServerManager.Instance.IsLogIn && !ServerManager.Instance.IsLogOut)
+        {
+            StartCoroutine(ApplicationQuitRoutine());
+            return false;
+        }
+
+        return true;
     }
     
+#if UNITY_EDITOR
     private void OnPlayModeStateChanged(PlayModeStateChange state)
     {
         if (state == PlayModeStateChange.ExitingPlayMode && ServerManager.Instance.IsLogIn && !ServerManager.Instance.IsLogOut)
@@ -51,6 +57,7 @@ public class GameManager : MonoSingleton<GameManager>
             StartCoroutine(ApplicationQuitRoutine());
         }
     }
+#endif
 
     private IEnumerator ApplicationQuitRoutine()
     {
@@ -59,10 +66,10 @@ public class GameManager : MonoSingleton<GameManager>
 
         yield return new WaitUntil(() => ServerManager.Instance.IsLogOut);
         
+        Application.Quit();
+        
 #if UNITY_EDITOR
         EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
 #endif
     }
 }

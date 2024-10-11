@@ -1,4 +1,3 @@
-using System;
 using Microsoft.AspNetCore.SignalR.Client;
 using TMPro;
 using UnityEngine;
@@ -19,9 +18,9 @@ public class Player : MonoBehaviour
     {
         var gameHub = HubConnectionManager.Instance.GetHubConnection(HubType.GameHub);
         var userName = await gameHub.InvokeAsync<string>("GetUserName", character.OwnerUserId);
-        
+            
         _nickNameText.text = userName;
-        
+
         _level = character.Level;
         transform.position = new Vector3
         (
@@ -39,16 +38,12 @@ public class Player : MonoBehaviour
         });
     }
 
-    public void SetAndBroadcastPosition(Vector3 newPosition)
+    public async void SetAndBroadcastPosition(Vector3 newPosition)
     {
-        MainThreadDispatcher.Instance.Enqueue(async () =>
-        {
-            transform.position = newPosition;
-
-            var playerHub = HubConnectionManager.Instance.GetHubConnection(HubType.PlayerHub);
-            var jsonVector = JsonUtility.ToJson(newPosition.ToSystemVector());
-            await playerHub.SendAsync("UpdatePlayerPosition", ServerManager.Instance.MyUserId, jsonVector);
-        });
+        transform.position = newPosition;
+        var playerHub = HubConnectionManager.Instance.GetHubConnection(HubType.PlayerHub);
+        var jsonVector = JsonUtility.ToJson(newPosition.ToSystemVector());
+        await playerHub.SendAsync("UpdatePlayerPosition", ServerManager.Instance.MyUserId, jsonVector);
     }
 
     public Character GetData()
