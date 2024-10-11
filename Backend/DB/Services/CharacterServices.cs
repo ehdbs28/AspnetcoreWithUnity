@@ -23,6 +23,7 @@ public class CharacterServices
         var dbCharacter = await GetCharacterByUserIdAsync(character.OwnerUserId);
         dbCharacter.Level = character.Level;
         dbCharacter.LastPosition = character.LastPosition;
+        await _context.SaveChangesAsync();
     }
 
     public async Task<Character?> GetCharacterByUserIdAsync(int userId)

@@ -3,6 +3,7 @@ using System.Numerics;
 
 namespace Backend.DB.Models;
 
+[Serializable]
 public class Character
 {
     public int OwnerUserId { get; set; }

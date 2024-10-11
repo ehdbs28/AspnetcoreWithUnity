@@ -3,6 +3,7 @@ using Backend.DB;
 using Backend.DB.Models;
 using Backend.DB.Services;
 using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json;
 
 namespace Backend.Server.Hubs;
 
@@ -31,18 +32,22 @@ public class PlayerHub : Hub
             };
 
             await _characterDbServices.AddCharacter(newCharacter);
-            await Clients.All.SendAsync("CreatePlayer", character);
+
+            var characterData = JsonConvert.SerializeObject(newCharacter);
+            await Clients.All.SendAsync("CreatePlayer", characterData);
         }
         else
         {
-            await Clients.All.SendAsync("CreatePlayer", character);
+            var characterData = JsonConvert.SerializeObject(character);
+            await Clients.All.SendAsync("CreatePlayer", characterData);
         }
         
         _logger.LogInformation($"Success Create Character.");
     }
 
-    public async Task DeletePlayer(Character character)
+    public async Task DeletePlayer(string characterData)
     {
+        var character = JsonConvert.DeserializeObject<Character>(characterData);
         await _characterDbServices.UpdateCharacter(character);
         await Clients.All.SendAsync("DeletePlayer", character.OwnerUserId);
     }

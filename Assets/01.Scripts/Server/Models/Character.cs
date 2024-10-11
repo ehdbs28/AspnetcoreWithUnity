@@ -1,9 +1,12 @@
+using System;
+using UnityEngine;
+
+[Serializable]
 public class Character
 {
-    public int OwnerUserId { get; set; }
-    public int Level { get; set; }
-    
-    public float LastPositionX { get; set; }
-    public float LastPositionY { get; set; }
-    public float LastPositionZ { get; set; }
+    public int OwnerUserId;
+    public int Level;
+    public float LastPositionX;
+    public float LastPositionY;
+    public float LastPositionZ;
 }

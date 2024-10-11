@@ -26,10 +26,7 @@ public class HubConnectionManager : MonoSingleton<HubConnectionManager>, IDispos
                 .Build();
             _hubConnections[type] = newHubConnection;
         }
-    }
-
-    public async Task ConnectToServer()
-    {
+        
         try
         {
             foreach (HubType type in Enum.GetValues(typeof(HubType)))
@@ -57,6 +54,7 @@ public class HubConnectionManager : MonoSingleton<HubConnectionManager>, IDispos
             if (hubConnection.State != HubConnectionState.Connected)
             {
                 Debug.LogWarning($"{type.ToString()} is not connected.");
+                return null;
             }
 
             return hubConnection;

@@ -20,7 +20,7 @@ public class GameHub : Hub
     {
         if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
         {
-            await Clients.User(Context.ConnectionId).SendAsync("LoginFailure");
+            await Clients.Client(Context.ConnectionId).SendAsync("LoginFailure");
             return false;
         }
         
@@ -28,16 +28,16 @@ public class GameHub : Hub
         if (user == null)
         {
             user = await _userDbServices.AddUser(userName, password);
-            await Clients.User(Context.ConnectionId).SendAsync("LoginSuccess", user.Id);
+            await Clients.Client(Context.ConnectionId).SendAsync("LoginSuccess", user.Id);
         }
         else
         {
             if (user.Password != password)
             {
-                await Clients.User(Context.ConnectionId).SendAsync("LoginFailure");
+                await Clients.Client(Context.ConnectionId).SendAsync("LoginFailure");
                 return false;
             }
-            await Clients.User(Context.ConnectionId).SendAsync("LoginSuccess", user.Id);
+            await Clients.Client(Context.ConnectionId).SendAsync("LoginSuccess", user.Id);
         }
         
         var currentTime = DateTime.Now;
@@ -55,7 +55,7 @@ public class GameHub : Hub
             return;
         }
 
-        await Clients.User(Context.ConnectionId).SendAsync("LogOut", id);
+        await Clients.Client(Context.ConnectionId).SendAsync("LogOut", id);
         
         var currentTime = DateTime.Now;
         _logger.LogInformation($"({currentTime:hh:mm:ss}) LogOut User: {user.UserName}");

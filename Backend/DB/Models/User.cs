@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.DB.Models;
 
+[Serializable]
 public class User
 {
     public int Id { get; set; }
