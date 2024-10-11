@@ -7,18 +7,24 @@ namespace Backend.Server.Hubs;
 
 public class GameHub : Hub
 {
-    private static readonly Dictionary<string, Player> Players = new Dictionary<string, Player>();
-
     private readonly ILogger<GameHub> _logger;
+    private static int _userCount;
 
     public GameHub(ILogger<GameHub> logger)
     {
         _logger = logger;
     }
 
+    public override async Task OnConnectedAsync()
+    {
+        _userCount++;
+        await Clients.All.SendAsync("ClientConnect", _userCount.ToString());
+        await base.OnConnectedAsync();
+    }
+
     public async Task ConnectPlayer(string nickName)
     {
-        var clientId = Context.ConnectionId;
+        var clientId = _userCount.ToString();
 
         PlayerManager.Instance.ConnectPlayer(clientId, nickName);
         

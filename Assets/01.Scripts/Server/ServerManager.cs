@@ -1,67 +1,57 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
-using TMPro;
 using UnityEngine;
 
-public class ServerManager : MonoSingleton<ServerManager>
+public class ServerManager : MonoSingleton<ServerManager>, IGameHubConnector
 {
-    private HubConnection _gameHub;
-    private string _playerId;
+    public string MyClientId { get; private set; }    
 
-    private bool _isSet = false;
-
-    [Header("For Test")] 
-    [SerializeField] private TextMeshProUGUI _logText;
-
-    private async void Start()
+    public void Init()
     {
-        _gameHub = HubConnectionManager.Instance.GetHubConnection(HubType.GameHub);
+        var gameHub = HubConnectionManager.Instance.GetHubConnection(HubType.GameHub);
 
-        _gameHub.On<string, string>("ReceiveMessage", (clientId, message) =>
+        gameHub.On<string>("ClientConnect", OnClientConnect);
+        gameHub.On<string, string>("PlayerJoined", OnPlayerJoined);
+        gameHub.On<string>("PlayerLeft", OnPlayerLeft);
+    }
+
+    public bool IsOwner(string clientId)
+    {
+        return MyClientId == clientId;
+    }
+
+    public void OnClientConnect(string clientId)
+    {
+        if (string.IsNullOrEmpty(MyClientId))
         {
-            var log = $"{clientId}: {message}\n";
-            Debug.Log(log);
-            _logText.text += log;
-        });
+            MyClientId = clientId;
+        }
+    }
 
-        _gameHub.On<string>("PlayerJoined", playerId =>
-        {
-            if (_isSet)
-            {
-                return;
-            }
-            
-            _playerId = playerId;
-            _isSet = true;
-        });
-
+    public void OnPlayerJoined(string clientId, string nickName)
+    {
         try
         {
-            await HubConnectionManager.Instance.StartConnection(HubType.GameHub);
-            Debug.Log("Connection to hub");
+            PlayerManager.Instance.CreatePlayer(clientId, nickName);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Debug.LogError(e);
+            throw;
         }
-
-        await _gameHub.InvokeAsync("JoinGame");
     }
 
-    public async void SendMessage(string playerId, string message)
+    public void OnPlayerLeft(string clientId)
     {
         try
         {
-            await _gameHub.InvokeAsync("SendMessage", playerId, message);
+            PlayerManager.Instance.DestroyPlayer(clientId);
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            Debug.LogError($"Error sending message: {ex.Message}");
+            Debug.LogError(e);
+            throw;
         }
-    }
-
-    private async void OnDestroy()
-    {
-        await HubConnectionManager.Instance.StopConnection(HubType.GameHub);
     }
 }

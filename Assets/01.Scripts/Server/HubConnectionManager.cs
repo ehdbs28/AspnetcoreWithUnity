@@ -7,6 +7,7 @@ using UnityEngine;
 public enum HubType
 {
     GameHub,
+    PlayerHub,
 }
 
 public class HubConnectionManager : MonoSingleton<HubConnectionManager>, IDisposable
@@ -16,39 +17,49 @@ public class HubConnectionManager : MonoSingleton<HubConnectionManager>, IDispos
     
     private object _locker = new object();
 
+    public async Task Init()
+    {
+        foreach (HubType type in Enum.GetValues(typeof(HubType)))
+        {
+            var newHubConnection = new HubConnectionBuilder()
+                .WithUrl($"{_serverUrl}{type.ToString()}")
+                .Build();
+            _hubConnections[type] = newHubConnection;
+        }
+    }
+
+    public async Task ConnectToServer()
+    {
+        try
+        {
+            foreach (HubType type in Enum.GetValues(typeof(HubType)))
+            {
+                await _hubConnections[type].StartAsync();
+            }
+            Debug.Log("Connection to hub");
+        }
+        catch(Exception e)
+        {
+            Debug.LogError(e);
+        }
+    }
+
     public HubConnection GetHubConnection(HubType type)
     {
         lock (_locker)
         {
-            if (!_hubConnections.ContainsKey(type) || _hubConnections[type] == null)
+            if (!_hubConnections.TryGetValue(type, out var hubConnection))
             {
-                var newHubConnection = new HubConnectionBuilder()
-                    .WithUrl($"{_serverUrl}{type.ToString()}")
-                    .Build();
-                
-                _hubConnections[type] = newHubConnection;
-                Debug.Log($"Create New Hub Connection: {type.ToString()}");
+                Debug.LogWarning($"{type.ToString()} is null.");
+                return null;
             }
-            
-            return _hubConnections[type];
-        }
-    }
 
-    public async Task StartConnection(HubType type)
-    {
-        var hubConnection = GetHubConnection(type);
-        if (hubConnection.State != HubConnectionState.Connected)
-        {
-            await hubConnection.StartAsync();
-        }
-    }
+            if (hubConnection.State != HubConnectionState.Connected)
+            {
+                Debug.LogWarning($"{type.ToString()} is not connected.");
+            }
 
-    public async Task StopConnection(HubType type)
-    {
-        var hubConnection = GetHubConnection(type);
-        if (hubConnection.State == HubConnectionState.Connected)
-        {
-            await hubConnection.StopAsync();
+            return hubConnection;
         }
     }
 
